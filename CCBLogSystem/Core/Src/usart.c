@@ -21,6 +21,12 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+#include <stdio.h>
+int fputc(int ch, FILE *f)
+{
+  HAL_UART_Transmit(&huart5, (uint8_t *)&ch, 1, 0xffff);
+  return ch;
+}
 
 /* USER CODE END 0 */
 

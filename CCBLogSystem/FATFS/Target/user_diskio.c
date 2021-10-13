@@ -36,7 +36,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
-
+#include "fatfs_sd.h"
+#include "diskio.h"		/* Declarations of disk functions */
+#include "w25qxx.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -82,8 +84,8 @@ DSTATUS USER_initialize (
 )
 {
   /* USER CODE BEGIN INIT */
-    Stat = STA_NOINIT;
-    return Stat;
+	//return SD_disk_initialize(pdrv);
+	return RES_OK;
   /* USER CODE END INIT */
 }
 
@@ -97,8 +99,8 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-    Stat = STA_NOINIT;
-    return Stat;
+    //return SD_disk_status(pdrv);
+    return RES_OK;
   /* USER CODE END STATUS */
 }
 
@@ -118,7 +120,15 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-    return RES_OK;
+    //return SD_disk_read(pdrv, buff, sector, count);
+    UINT i = 0;
+  for(i = 0; i < count; i ++)
+  {  
+	W25qxx_ReadSector(buff, sector, 0, 0);
+    sector ++;
+    buff += 4096;
+  }
+  return RES_OK;
   /* USER CODE END READ */
 }
 
@@ -140,7 +150,15 @@ DRESULT USER_write (
 {
   /* USER CODE BEGIN WRITE */
   /* USER CODE HERE */
-    return RES_OK;
+    //return SD_disk_write(pdrv, buff, sector, count);
+    UINT i = 0;
+  for(i = 0; i < count; i ++)
+  {
+	W25qxx_WritePage((BYTE *)buff, sector, 0, 0);
+    sector ++;
+    buff += 4096;
+  }
+  return RES_OK;
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -160,8 +178,35 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    DRESULT res = RES_ERROR;
-    return res;
+    //return SD_disk_ioctl(pdrv, cmd, buff);
+    DRESULT res = RES_OK;
+  
+  switch(cmd)
+  {
+    case CTRL_SYNC :
+        break;	
+ 
+    case CTRL_TRIM:
+        break;
+		
+    case GET_BLOCK_SIZE:
+	*(DWORD*)buff = 65536;
+	break;
+		
+    case GET_SECTOR_SIZE:
+	*(DWORD*)buff = 4096;
+        break;
+		
+    case GET_SECTOR_COUNT:
+	*(DWORD*)buff = 200;
+	break;
+			
+    default:
+	res = RES_PARERR;
+	break;
+    }
+  
+  return res;
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */
